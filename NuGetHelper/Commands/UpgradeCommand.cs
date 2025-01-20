@@ -62,12 +62,8 @@ public class UpgradeCommand : ICommandDefinition
         var project = new Project(path);
         var packageReferences = GetPackageReferences(project);
 
-        var repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-        var resource = await repository.GetResourceAsync<FindPackageByIdResource>();
-
         var updates = await ProcessPackagesAsync(
             packageReferences,
-            resource,
             stable,
             suppress,
             dryRun,
@@ -131,7 +127,6 @@ public class UpgradeCommand : ICommandDefinition
         IEnumerable<(string Package, NuGetVersion CurrentVersion, NuGetVersion UpdateVersion)>
     > ProcessPackagesAsync(
         IEnumerable<(string Package, string Version)> packages,
-        FindPackageByIdResource resource,
         bool stable,
         bool suppress,
         bool dryRun,
@@ -152,16 +147,30 @@ public class UpgradeCommand : ICommandDefinition
                     return;
                 }
 
-                var versions = await resource.GetAllVersionsAsync(
+                var repository = Repository.Factory.GetCoreV3(
+                    "https://api.nuget.org/v3/index.json"
+                );
+                var metadataResource = await repository.GetResourceAsync<PackageMetadataResource>(
+                    ct
+                );
+
+                var currentIsPreRelease = version.IsPrerelease;
+
+                var metadata = await metadataResource.GetMetadataAsync(
                     package.Package,
+                    includePrerelease: !stable || currentIsPreRelease,
+                    includeUnlisted: false,
                     NullSourceCacheContext.Instance,
                     NullLogger.Instance,
                     ct
                 );
 
-                var latest = versions.Where(x => !x.IsPrerelease || !stable).Max();
+                var latest = metadata
+                    .Select(m => m.Identity.Version)
+                    .Where(x => !x.IsPrerelease || !stable || currentIsPreRelease)
+                    .Max();
 
-                if (latest == null)
+                if (latest?.Version == null)
                 {
                     Console.WriteLine($"Could not find latest version for {package.Package}");
                     return;
@@ -178,6 +187,12 @@ public class UpgradeCommand : ICommandDefinition
                         updates.Add((package.Package, version, latest));
                         Console.WriteLine($"Updating {package.Package} from {version} to {latest}");
                     }
+                }
+                else if (version > latest)
+                {
+                    Console.WriteLine(
+                        $"{package.Package} @ {version} is ahead of latest version {latest}"
+                    );
                 }
                 else if (!suppress)
                 {

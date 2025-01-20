@@ -7,13 +7,14 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>nuget-helper</ToolCommandName>
     <PackageId>Hona.NuGetHelper</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <DisableMSBuildAssemblyCopyCheck>true</DisableMSBuildAssemblyCopyCheck>
     <Authors>Luke Parker (Hona)</Authors>
     <PackageDescription>Tooling to use NuGet long term suck. NuGet is awesome. This CLI tool tries to patch some of the gaps.</PackageDescription>
     <RepositoryUrl>https://github.com/Hona/NuGetHelper</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="17.12.6" />
