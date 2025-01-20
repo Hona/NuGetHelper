@@ -20,7 +20,7 @@ Commands:
 ## Installation
 
 ```pwsh
-dotnet tool install -g NuGetHelper
+dotnet tool install -g Hona.NuGetHelper
 ```
 
 ## Example commands
